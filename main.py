@@ -33,6 +33,29 @@ def search_images(query):
         "format": "json"
     }
 
+    headers = {
+        "User-Agent": "PromptZenAutomation/1.0 (research bot)"
+    }
+
+    response = requests.get(
+        url,
+        params=params,
+        headers=headers,
+        timeout=30
+    )
+
+    response.raise_for_status()
+
+    try:
+        data = response.json()
+    except ValueError:
+        raise Exception(
+            f"Wikimedia returned invalid response: "
+            f"{response.text[:300]}"
+        )
+
+    return data.get("query", {}).get("pages", {}).values()
+
     response = requests.get(url, params=params).json()
     return response.get("query", {}).get("pages", {}).values()
 
