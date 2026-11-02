@@ -1,14 +1,69 @@
 import os
 import requests
+import time
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+API = f"https://api.telegram.org/bot{TOKEN}"
 
-response = requests.post(url, data={
-    "chat_id": CHAT_ID,
-    "text": "Hello! Prompt Zen Automation is connected successfully!"
-})
+CATEGORIES = {
+    "Boys Photos": "boys portrait photography",
+    "Girls Photos": "girls portrait photography",
+    "Birthday Photos": "birthday photography"
+}
 
-print(response.json())
+def send_message(text):
+    requests.post(
+        f"{API}/sendMessage",
+        data={"chat_id": CHAT_ID, "text": text}
+    )
+
+def search_images(query):
+    url = "https://commons.wikimedia.org/w/api.php"
+
+    params = {
+        "action": "query",
+        "generator": "search",
+        "gsrsearch": query,
+        "gsrnamespace": 6,
+        "gsrlimit": 2,
+        "prop": "imageinfo",
+        "iiprop": "url",
+        "format": "json"
+    }
+
+    response = requests.get(url, params=params).json()
+    return response.get("query", {}).get("pages", {}).values()
+
+for category, query in CATEGORIES.items():
+
+    send_message(f"Research Category: {category}")
+
+    for item in search_images(query):
+
+        image = item.get("imageinfo", [{}])[0].get("url")
+
+        if not image:
+            continue
+
+        message = (
+            f"Category: {category}\n\n"
+            f"Image URL: {image}\n\n"
+            f"Short Prompt: /portraitstyle\n\n"
+            f"Detailed Prompt: Create a beautiful, "
+            f"high-quality {query}, professional composition."
+        )
+
+        requests.post(
+            f"{API}/sendPhoto",
+            data={
+                "chat_id": CHAT_ID,
+                "photo": image,
+                "caption": message[:1000]
+            }
+        )
+
+        time.sleep(2)
+
+send_message("Research Test Completed!")
