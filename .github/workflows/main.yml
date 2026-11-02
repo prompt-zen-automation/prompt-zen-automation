@@ -9,6 +9,10 @@ jobs:
   research:
     runs-on: ubuntu-latest
 
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,5 +22,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run Research
+      - name: Install requests
+        run: pip install requests
+
+      - name: Run Telegram Test
         run: python main.py
